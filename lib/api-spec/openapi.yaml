@@ -1,0 +1,417 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: InternPredict AI API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: resume
+    description: Resume analysis operations
+  - name: predict
+    description: Internship prediction operations
+  - name: dashboard
+    description: Student dashboard operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /resume/analyze:
+    post:
+      operationId: analyzeResume
+      tags: [resume]
+      summary: Analyze resume text
+      description: Analyzes resume content and returns ATS score, keyword matches, and skills analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResumeAnalyzeRequest"
+      responses:
+        "200":
+          description: Resume analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeAnalysisResult"
+
+  /predict/internship:
+    post:
+      operationId: predictInternship
+      tags: [predict]
+      summary: Predict internship selection probability
+      description: Uses ML model to predict internship selection probability based on student profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PredictRequest"
+      responses:
+        "200":
+          description: Prediction result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictionResult"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary
+      description: Returns aggregated student dashboard data including readiness score and career insights
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /skills/categories:
+    get:
+      operationId: getSkillsCategories
+      tags: [dashboard]
+      summary: Get skills categories
+      description: Returns all skill categories with proficiency data
+      responses:
+        "200":
+          description: Skills categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillsCategories"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ResumeAnalyzeRequest:
+      type: object
+      properties:
+        resumeText:
+          type: string
+          description: Raw text content of the resume
+        targetRole:
+          type: string
+          description: Target internship role (e.g. "Software Engineer")
+      required:
+        - resumeText
+
+    KeywordMatch:
+      type: object
+      properties:
+        keyword:
+          type: string
+        found:
+          type: boolean
+        importance:
+          type: string
+          enum: [high, medium, low]
+      required:
+        - keyword
+        - found
+        - importance
+
+    SkillAnalysis:
+      type: object
+      properties:
+        name:
+          type: string
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced, expert]
+        score:
+          type: number
+        category:
+          type: string
+      required:
+        - name
+        - level
+        - score
+        - category
+
+    ResumeAnalysisResult:
+      type: object
+      properties:
+        atsScore:
+          type: number
+          description: Overall ATS compatibility score (0-100)
+        formatScore:
+          type: number
+          description: Resume format score (0-100)
+        keywordScore:
+          type: number
+          description: Keyword match score (0-100)
+        skillsScore:
+          type: number
+          description: Skills coverage score (0-100)
+        keywordMatches:
+          type: array
+          items:
+            $ref: "#/components/schemas/KeywordMatch"
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillAnalysis"
+        missingKeywords:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        strengths:
+          type: array
+          items:
+            type: string
+      required:
+        - atsScore
+        - formatScore
+        - keywordScore
+        - skillsScore
+        - keywordMatches
+        - skills
+        - missingKeywords
+        - recommendations
+        - strengths
+
+    PredictRequest:
+      type: object
+      properties:
+        cgpa:
+          type: number
+          description: Cumulative GPA (0-10 scale)
+        skillsCount:
+          type: integer
+          description: Number of technical skills
+        projectsCount:
+          type: integer
+          description: Number of projects completed
+        certificationsCount:
+          type: integer
+          description: Number of certifications earned
+        internshipsCount:
+          type: integer
+          description: Number of previous internships
+        hackathonsCount:
+          type: integer
+          description: Number of hackathons participated in
+      required:
+        - cgpa
+        - skillsCount
+        - projectsCount
+        - certificationsCount
+
+    PredictionResult:
+      type: object
+      properties:
+        probability:
+          type: number
+          description: Internship selection probability (0-100)
+        grade:
+          type: string
+          description: Readiness grade (A+, A, B+, B, C, D)
+        label:
+          type: string
+          description: Human-readable label
+        factors:
+          type: array
+          items:
+            $ref: "#/components/schemas/PredictionFactor"
+        tips:
+          type: array
+          items:
+            type: string
+        similarProfiles:
+          type: array
+          items:
+            $ref: "#/components/schemas/SimilarProfile"
+      required:
+        - probability
+        - grade
+        - label
+        - factors
+        - tips
+        - similarProfiles
+
+    PredictionFactor:
+      type: object
+      properties:
+        name:
+          type: string
+        impact:
+          type: number
+          description: Feature importance weight (0-1)
+        value:
+          type: number
+        status:
+          type: string
+          enum: [good, average, poor]
+      required:
+        - name
+        - impact
+        - value
+        - status
+
+    SimilarProfile:
+      type: object
+      properties:
+        company:
+          type: string
+        role:
+          type: string
+        probability:
+          type: number
+      required:
+        - company
+        - role
+        - probability
+
+    CareerInsight:
+      type: object
+      properties:
+        title:
+          type: string
+        value:
+          type: string
+        trend:
+          type: string
+          enum: [up, down, stable]
+        changePercent:
+          type: number
+      required:
+        - title
+        - value
+        - trend
+        - changePercent
+
+    ProgressCard:
+      type: object
+      properties:
+        category:
+          type: string
+        current:
+          type: number
+        target:
+          type: number
+        unit:
+          type: string
+      required:
+        - category
+        - current
+        - target
+        - unit
+
+    DashboardSummary:
+      type: object
+      properties:
+        readinessScore:
+          type: number
+        readinessGrade:
+          type: string
+        totalAnalyses:
+          type: integer
+        topSkills:
+          type: array
+          items:
+            type: string
+        careerInsights:
+          type: array
+          items:
+            $ref: "#/components/schemas/CareerInsight"
+        progressCards:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProgressCard"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+      required:
+        - readinessScore
+        - readinessGrade
+        - totalAnalyses
+        - topSkills
+        - careerInsights
+        - progressCards
+        - recentActivity
+
+    ActivityItem:
+      type: object
+      properties:
+        action:
+          type: string
+        detail:
+          type: string
+        timestamp:
+          type: string
+      required:
+        - action
+        - detail
+        - timestamp
+
+    SkillCategory:
+      type: object
+      properties:
+        category:
+          type: string
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillItem"
+        avgProficiency:
+          type: number
+      required:
+        - category
+        - skills
+        - avgProficiency
+
+    SkillItem:
+      type: object
+      properties:
+        name:
+          type: string
+        proficiency:
+          type: number
+        demand:
+          type: string
+          enum: [high, medium, low]
+      required:
+        - name
+        - proficiency
+        - demand
+
+    SkillsCategories:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillCategory"
+      required:
+        - categories
