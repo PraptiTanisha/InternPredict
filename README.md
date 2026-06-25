@@ -1,6 +1,6 @@
-# InternPredict AI
+# InternPredict 
 
-> AI-powered resume analyzer and internship readiness predictor for students.
+-resume analyzer and internship readiness predictor for students.
 
 InternPredict AI helps students evaluate their resumes against ATS standards, discover skill gaps, and estimate their probability of landing an internship using a machine learning-inspired prediction model.
 
